@@ -4,7 +4,8 @@ module Nodes
 		getter parent : DAGNode(T) | Nil
 		getter value : T
 
-		def intialize (@value : T)
+		def initialize (@value : T)
+			@children = [] of DAGNode(T)
 		end
 
 		def << (child : DAGNode(T))
@@ -20,22 +21,71 @@ module Nodes
 			return [ self ] if @parent.nil?
 			return @parent.not_nil!.path_to_root + [ self ]
 		end
+
+		def dfs (&block)
+			yield self
+			@children.each do |child|
+				child.dfs &block
+			end
+		end
+
+		def bfs (&block)
+			queue = [self]
+			until queue.empty?
+				curr = queue.shift
+				yield curr
+				queue += curr.children
+			end
+		end
 	end
 
 	class SimpleNode(T)
-		getter siblings : Array(DAGNode(T))
+		getter siblings : Array(SimpleNode(T))
 		getter value : T
 
-		def intialize (@value : T)
+		def initialize (@value : T)
+			@siblings = [] of SimpleNode(T)
 		end
 
-		def << (sibling : DAGNode(T))
+		def << (sibling : SimpleNode(T))
 			@siblings << sibling
 			sibling.siblings << self
 		end
 
-		protected def siblings << (other)
+		protected def << (other)
 			@siblings << other
+		end
+
+		def dfs (&block)
+			queue = [self]
+			visited = Set(SimpleNode).new
+			until queue.empty?
+				curr = queue.pop
+
+				next if visited.includes? curr
+				yield curr
+				visited.add curr
+
+				curr.each do |child|
+					queue << child unless visited.includes? child
+				end
+			end
+		end
+
+		def bfs (&block)
+			queue = [self]
+			visited = Set(SimpleNode).new
+			until queue.empty?
+				curr = queue.shift
+
+				next if visited.includes? curr
+				yield curr
+				visited.add curr
+
+				curr.each do |child|
+					queue << child unless visited.includes? child
+				end
+			end
 		end
 	end
 
@@ -43,7 +93,8 @@ module Nodes
 		getter edges : Array(Edge(ET,VT))
 		getter value : VT
 
-		def intialize (@value : VT)
+		def initialize (@value : VT)
+			@edges = [] of Edge(ET,VT)
 		end
 
 		def  << (edge : Edge(ET,VT))
@@ -58,11 +109,11 @@ module Nodes
 		end
 	end
 
-	class Edge(ET,NT)
+	class Edge(ET,VT)
 		getter value : ET
 		getter nodes : Tuple(Node(ET,VT)) # order is intended to not matter
 
-		def intialize (@value : ET, a : Node(ET,VT), b : Node(ET,VT))
+		def initialize (@value : ET, a : Node(ET,VT), b : Node(ET,VT))
 			@nodes = {a, b}
 		end
 	end
