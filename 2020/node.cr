@@ -97,7 +97,7 @@ module Nodes
 			@edges = [] of Edge(ET,VT)
 		end
 
-		def  << (edge : Edge(ET,VT))
+		def << (edge : Edge(ET,VT))
 			@edges << edge
 		end
 
@@ -111,10 +111,18 @@ module Nodes
 
 	class Edge(ET,VT)
 		getter value : ET
-		getter nodes : Tuple(Node(ET,VT)) # order is intended to not matter
+		getter nodes : Tuple(Node(ET,VT), Node(ET,VT)) # order is intended to not matter
 
 		def initialize (@value : ET, a : Node(ET,VT), b : Node(ET,VT))
 			@nodes = {a, b}
+		end
+
+		def from
+			nodes[0]
+		end
+
+		def to
+			nodes[1]
 		end
 	end
 end
