@@ -10,7 +10,6 @@ inst_ptr = 0
 acc = 0
 visited = Set(Int32).new
 
-# part 1
 # loop do
 #   if visited.includes? inst_ptr
 #     puts acc
