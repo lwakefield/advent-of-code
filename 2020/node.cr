@@ -13,7 +13,7 @@ module Nodes
 			child.parent = self
 		end
 
-		protected def parent= (p : Node | Nil)
+		protected def parent= (p : DAGNode(T) | Nil)
 			@parent = p
 		end
 
