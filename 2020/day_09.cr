@@ -4,14 +4,20 @@ File.each_line("./day_09.txt") do |line|
 end
 
 chunk_size = 25
-(0...(numbers.size - chunk_size)).each do |idx|
-    chunk = numbers[idx...idx+chunk_size]
-    is_valid = false
-    chunk.combinations(2).each do |pair|
-        is_valid = true if pair.sum == numbers[idx + chunk_size]
+numbers.each_cons(chunk_size + 1) do |chunk|
+    valid_pair = chunk[..-2].combinations(2).find do |pair|
+        pair.sum == chunk[-1]
     end
-    puts "preamble at #{idx} is invalid for [#{idx+chunk_size}]=#{numbers[idx+chunk_size]}" unless is_valid
+    puts "invalid number #{chunk[-1]}" unless valid_pair
 end
+# (0...(numbers.size - chunk_size)).each do |idx|
+#     chunk = numbers[idx...idx+chunk_size]
+#     is_valid = false
+#     chunk.combinations(2).each do |pair|
+#         is_valid = true if pair.sum == numbers[idx + chunk_size]
+#     end
+#     puts "preamble at #{idx} is invalid for [#{idx+chunk_size}]=#{numbers[idx+chunk_size]}" unless is_valid
+# end
 
 # ans from p1: 1038347917 at index 646
 
