@@ -13,10 +13,10 @@ class Grid(T)
 	end
 
 	def []? (x : Int32, y : Int32)
-		nil if x < 0
-		nil if x >= @width
-		nil if y < 0
-		nil if y >= @height
+		return nil if x < 0
+		return nil if x >= @width
+		return nil if y < 0
+		return nil if y >= @height
 
 		@grid[{x, y}]
 	end
@@ -36,6 +36,12 @@ class Grid(T)
 			@width.times do |x|
 				yield x, y, self[x, y]
 			end
+		end
+	end
+
+	def clone
+		Grid(T).new(@width, @height) do |x, y|
+			self[x, y]
 		end
 	end
 
