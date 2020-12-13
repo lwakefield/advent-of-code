@@ -17,16 +17,31 @@ end
 
 puts "part 1: #{next_bus_id.not_nil! * (next_bus_at - timestamp)}"
 
-buses = lines[1].split(",").reject("x").map(&.to_i)
-first_bus, last_bus = buses.first, buses.last
-
-n = 1
-loop do
-  first_bus_t = n * first_bus
-  if first_bus_t % last_bus == 0
-    puts "found period at #{first_bus_t}"
-    exit
+def find_period(start_t, step, y, delta)
+  t = start_t
+  until (t + delta) % y == 0
+    t += step
   end
-
-  n += 1
+  period_start = t
+  t += step
+  until (t + delta) % y == 0
+    t += step
+  end
+  { period_start, t }
 end
+
+def crack_code_2 (parts)
+  numbers = parts.compact
+
+  period = {0u64, numbers.first}
+  (1...numbers.size).each do |idx|
+    delta = parts.index(numbers[idx]).not_nil! - parts.index(numbers[0]).not_nil!
+    period = find_period(period[0], period[1] - period[0], numbers[idx], delta)
+    puts period
+   end
+
+end
+
+crack_code_2(
+  lines[1].split(",").map { |b| b == "x" ? nil : b.to_u64 }
+)
