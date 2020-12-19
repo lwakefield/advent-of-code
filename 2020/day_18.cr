@@ -1,13 +1,5 @@
 require "string_scanner"
 
-class Node
-  property val : String
-  property children = [] of Node
-
-  def initialize(@val)
-  end
-end
-
 def lex(str)
   rgx = Regex.union([
     /\d+/,
@@ -27,54 +19,84 @@ def lex(str)
   tokens
 end
 
-def eval(str)
-  eval_tokens(lex(str))
-end
+class Node
+  getter val
+  getter children = [] of Node
 
-def eval_tokens(tokens)
-  res_stack = [] of UInt64
-  op_stack = [] of String
-
-  until tokens.empty?
-    tok = tokens.shift
-    # puts "tok=#{tok} res=#{res_stack} op=#{op_stack}"
-
-    case tok
-    when "+", "*" then op_stack << tok
-    when .matches? /\d+/
-      case op_stack.pop?
-      when "+" then res_stack[-1] += tok.to_u64
-      when "*" then res_stack[-1] *= tok.to_u64
-      else res_stack << tok.to_u64
-      end
-    when "(" then op_stack << "("
-    when ")"
-      val = res_stack.pop?
-      case op_stack.pop?
-      when "+" then res_stack[-1] += val.not_nil!
-      when "*" then res_stack[-1] *= val.not_nil!
-      else
-        res_stack << val if val
-      end
-    else
-      raise "unhandled token #{tok}"
-    end
+  def initialize(@val : String)
   end
-
-  raise "unfinished expression res=#{res_stack} op=#{op_stack}" unless res_stack.size == 1
-  res_stack[0]
 end
 
-def eval_tokens_2(tokens)
+def get_precedence(tok)
+  case tok
+  when "*" then 1
+  when "+" then 2
+  when "(" then 3
+  else          0
+  end
+end
+
+def parse_infix(left, tokens)
+    return nil unless tokens[0] == "+" || tokens[0] == "*"
+
+    n = Node.new(tokens[0])
+    n.children << left
+    precedence = get_precedence(tokens[0])
+    tokens.shift
+    n.children << parse_expression(precedence, tokens)
+    n
+end
+
+def parse_prefix(tokens)
+    case tokens[0]
+    when .matches? /\d+/ then Node.new(tokens.shift)
+    when "("
+        tokens.shift
+        n = Node.new("()")
+        n.children << parse_expression(0, tokens)
+        raise "expected )" unless tokens[0] == ")"
+        tokens.shift
+        n
+    else raise "could not parse #{tokens[0]}"
+    end
+end
+
+def parse_expression (precedence, tokens)
+  left = parse_prefix(tokens)
+  raise "no prefix expr" unless left
+
+  while !tokens.empty? && precedence < get_precedence(tokens[0])
+    infix = parse_infix(left, tokens)
+    return left if infix.nil?
+    left = infix
+  end
+  left
+end
+
+def eval (node)
+    if node.val == "()"
+        return eval node.children.first
+    elsif node.val == "+"
+        return eval(node.children[0]) + eval(node.children[1])
+    elsif node.val == "*"
+        return eval(node.children[0]) * eval(node.children[1])
+    elsif node.val =~ /\d+/
+        return node.val.to_u64
+    else raise "could not eval #{node}"
+    end
+end
+
+def run (str)
+    eval(parse_expression(0, lex(str)))
 end
 
 acc = 0u64
 File.each_line("day_18.txt") do |line|
-begin
-    acc += eval(line)
-    rescue ex
-        puts ex
-        puts line
-        end
+  begin
+    acc += run(line)
+  rescue ex
+    puts ex
+    puts line
+  end
 end
-puts "part 1: #{acc}"
+puts "part 2: #{acc}"
