@@ -1,8 +1,13 @@
+require "time"
 cups = ( ARGV.first? || "523764819" ).chars.map(&.to_i)
 
 min, max = cups.min, cups.max
 
-100.times do
+cups += ((max+1)..1_000_000).map(&.to_i)
+
+start = Time.local
+10_000_000.times do |i|
+    puts "#{(Time.local - start).total_seconds}s #{i}" if i % 1000 == 0
     # puts cups
     current_cup = cups[0]
     three_cups = cups.delete_at 1..3
@@ -20,4 +25,7 @@ min, max = cups.min, cups.max
     cups = next_cups.rotate
 end
 one_index = cups.index(1).not_nil!
-puts "part 1 cups=#{cups} ans=#{(cups[one_index+1...] + cups[...one_index]).join}"
+until cups.first == 0
+    cups.rotate!
+end
+puts "part 2 slice=#{cups[0...3]}"
