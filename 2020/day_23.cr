@@ -1,31 +1,46 @@
 require "time"
-cups = ( ARGV.first? || "523764819" ).chars.map(&.to_i)
+cups = Deque.new (ARGV.first? || "523764819").chars.map(&.to_i)
 
-min, max = cups.min, cups.max
 
-cups += ((max+1)..1_000_000).map(&.to_i)
+def solve(cups : Deque(Int32), iterations)
+  start = Time.local
+  min, max = cups.min, cups.max
 
-start = Time.local
-10_000_000.times do |i|
+  iterations.times do |i|
     puts "#{(Time.local - start).total_seconds}s #{i}" if i % 1000 == 0
-    # puts cups
-    current_cup = cups[0]
-    three_cups = cups.delete_at 1..3
-    # puts three_cups
-    # puts cups
+    current_cup = cups.shift
+    three_cups = [
+        cups.shift,
+        cups.shift,
+        cups.shift,
+    ]
+
     destination = current_cup
-    until current_cup != destination && cups.includes?(destination)
-        destination -= 1
-        destination = max if destination < min
+    until destination != current_cup && !three_cups.includes?(destination)
+      destination -= 1
+      destination = max if destination < min
     end
-    # puts destination
-    # read_line
+
     destination_index = cups.index(destination).not_nil!
-    next_cups = (cups[0..destination_index] + three_cups + cups[destination_index+1..])
-    cups = next_cups.rotate
-end
-one_index = cups.index(1).not_nil!
-until cups.first == 0
+    cups.insert destination_index + 1, three_cups[2]
+    cups.insert destination_index + 1, three_cups[1]
+    cups.insert destination_index + 1, three_cups[0]
+    cups.push(current_cup)
+  end
+
+  until cups.first == 1
     cups.rotate!
+  end
+
+  cups
 end
-puts "part 2 slice=#{cups[0...3]}"
+
+cups_part_1 = solve(cups.dup, 100)
+puts "part 1 cups=#{cups_part_1}"
+
+# min, max = cups.min, cups.max
+
+cups_part_2 = solve(cups.dup + Deque.new((10..1_000_000).map(&.to_i)), 10_000_000)
+
+puts "part 2 slice=[#{cups_part_2[0]}, #{cups_part_2[1]}, #{cups_part_2[2]}]"
+puts "part 2 ans=#{cups_part_2}"
