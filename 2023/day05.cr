@@ -1,7 +1,5 @@
 input = (File.read ARGV.first)
 
-# puts input.split /\n\n/
-
 seeds                       = input.match(/(?<=seeds: ).+?(?=\n\n)/m).not_nil![0].split.map(&.to_i64)
 seed_to_soil_map            = t input.match(/(?<=seed-to-soil map:\n).+?(?=\n\n)/m).not_nil![0]
 soil_to_fertilizer_map      = t input.match(/(?<=soil-to-fertilizer map:\n).+?(?=\n\n)/m).not_nil![0]
