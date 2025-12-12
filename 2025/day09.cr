@@ -24,67 +24,36 @@ map = {} of Tuple(Int64, Int64) => Char
   end
 end
 
-
-
-def find_start (tiles, map)
-  minx, maxx = tiles.minmax_by(&.[0]).map(&.[0])
-  miny, maxy = tiles.minmax_by(&.[1]).map(&.[1])
-  ((miny - 1)..(maxy + 1)).each do |y|
-    ((minx - 1)..(maxx + 1)).each do |x|
-      if map[{x - 2, y}]?.nil? && !map[{x - 1, y}]?.nil? && map[{x, y}]?.nil?
-        return {x, y}
-      end
-    end
-  end
+def orientation (p, q, r)
+  val = (q[1] - p[1]) * (r[0] - q[0]) - (q[0] - p[0]) * (r[1] - q[1])
+  return 0 if val == 0
+  return 1 if val > 0
+  2
 end
 
-# NOTE: doesn't seem like flood filling is a viable option (within 2Gi of RAM at least)
-# to_fill = [ find_start(red_tiles, map).not_nil! ]
-# until to_fill.empty?
-#   x, y = to_fill.shift
-#   map[{x,y}] = 'X'
-#   [
-#       {x, y-1},
-#       {x, y+1},
-#       {x-1, y},
-#       {x+1, y},
-#   ].each do |p|
-#     to_fill << p unless map[p]?
-#   end
-# end
+# a, b are top-left, bottom-right of a rect, order gets fixed
+# c, d are ends of a line segment
+def intersects? (a, b, c, d)
+  ax, bx = {a[0],b[0]}.minmax
+  ay, by = {a[1],b[1]}.minmax
 
-# minx, maxx = red_tiles.minmax_by(&.[0]).map(&.[0])
+  cx, dx = {c[0],d[0]}.minmax
+  cy, dy = {c[1],d[1]}.minmax
 
-# miny, maxy = red_tiles.minmax_by(&.[1]).map(&.[1])
-# ((miny - 1)..(maxy + 1)).each do |y|
-#   ((minx - 1)..(maxx + 1)).each do |x|
-#     STDOUT << (map[{x,y}]? || '.')
-#   end
-#   STDOUT << '\n'
-# end
+  cx < bx && cy < by && dx > ax && dy > ay
+end
 
-# def is_valid (a, b, map)
-#   (miny..maxy).each do |y|
-#     (minx..maxx).each do |x|
-#     end
-#   end
-# end
+largest = 0
+red_tiles.combinations(2).each do |pair|
+  a, b = pair
+  is_valid = !(red_tiles + [red_tiles[0]]).each_cons_pair.any? do |c, d|
+    intersects? a, b, c, d
+  end
+  next unless is_valid
+  if (a = area(a,b)) > largest
+    largest = a
+  end
+end
+puts "part 2: #{largest}"
 
-# largest = 0u64
-# red_tiles.combinations(2).each do |p|
-#   minx, maxx = p.map(&.[0]).minmax
-#   miny, maxy = p.map(&.[1]).minmax
-#   is_valid = (miny..maxy).all? do |y|
-#     (minx..maxx).all? do |x|
-#       map[{x,y}]?
-#     end
-#   end
-
-#   next unless is_valid
-
-#   a = area(p[0], p[1])
-#   puts "#{p} -> #{a}"
-
-#   largest = Math.max largest, a
-# end
-# puts "part 2: #{largest}"
+# It took me a while to get this one! I really wanted to _understand_ the solution, so wasn't satisfied copy-pasting code. This is the solution I finally _got_: https://www.reddit.com/r/adventofcode/comments/1phywvn/comment/nt2xpf2/. A nice little "does line segment intersect rectangle" algorithm.
